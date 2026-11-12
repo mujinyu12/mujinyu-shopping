@@ -1,0 +1,43 @@
+# ==================== 端口号 ====================
+server:
+  port: 8100
+
+# ==================== 日志格式 ====================
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  cloud:
+    nacos:
+      discovery:
+        ip: __DUBBO_HOST__
+
+# ==================== Dubbo ====================
+dubbo:
+  application:
+    name: shopping_webhooks
+    qos-enable: false
+    # 关闭序列化检查，避免 POJO 未实现 Serializable 时调用被拦截
+    serialize-check-status: DISABLE
+    check-serializable: false
+  protocol:
+    name: dubbo
+    # -1 表示自动选择可用端口，避免多实例端口冲突
+    port: -1
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    # namespace 必须放在 parameters 下，不能拼进 address
+    # 不指定会注册/订阅到 public，与 goods_service 的命名空间不一致，导致找不到提供者
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+  # 消费方：开发阶段 goods_service 未启动时不影响本服务启动
+  consumer:
+    check: false
+    timeout: 5000
+# ==================== SkyWalking 告警回调（缺陷 40：必须带 token，收件人可配） ====================
+webhooks:
+  alarm-token: 0cf92a7d5e4386b1
+  alarm-to: 3389827066@qq.com

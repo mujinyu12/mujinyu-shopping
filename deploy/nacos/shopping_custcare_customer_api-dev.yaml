@@ -1,0 +1,33 @@
+server:
+  port: 8008
+
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  application:
+    name: shopping_custcare_customer_api
+
+dubbo:
+  application:
+    name: shopping_custcare_customer_api
+    qos-enable: false
+    serialize-check-status: DISABLE
+  protocol:
+    name: dubbo
+    port: -1
+    # 多网卡机器建议显式指定注册 IP，否则 Dubbo 可能选到错误的网卡
+    host: __DUBBO_HOST__
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+  # 纯消费方：不检查提供者是否已启动（否则 custcare_service 没起时本模块起不来），
+  # AI 回答比普通接口慢得多，默认 1000ms 超时必然失败，所以单独放到 60s，且不重试
+  consumer:
+    check: false
+    timeout: 60000
+    retries: 0

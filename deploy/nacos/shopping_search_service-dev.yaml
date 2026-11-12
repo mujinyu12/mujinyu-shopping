@@ -1,0 +1,40 @@
+# 端口号
+server:
+  port: 9008
+
+# 日志格式
+logging:
+  pattern:
+   console: '%d{HH:mm:ss.SSS} %clr(%-5level) ---  [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+ # elasticsearch
+  elasticsearch:
+   uris: http://__INFRA_HOST__:9200
+  application:
+   name: shopping_search_service #服务名
+  cloud:
+   nacos:
+    discovery:
+     server-addr: __INFRA_HOST__:8848 # 注册中心地址
+  
+dubbo:
+  application:
+    name: shopping_search_service
+    qos-enable: false          # 顺手关掉 QOS，避免 22222 端口冲突
+    serialize-check-status: DISABLE
+    check-serializable: false
+  protocol:
+    name: dubbo
+    port: -1
+    # 多网卡机器建议显式指定注册 IP，否则 Dubbo 可能选到错误的网卡
+    host: __DUBBO_HOST__
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+rocketmq:
+  #nameserver地址
+  name-server: __INFRA_HOST__:9876

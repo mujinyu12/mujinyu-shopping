@@ -13,15 +13,15 @@ spring:
       - optional:nacos:shopping_pay_service-dev.yaml
   cloud:
     nacos:
-      server-addr: 192.168.66.100:8848
-      username: nacos
-      password: nacos
+      server-addr: ${NACOS_ADDR:192.168.66.100:8848}
+      username: ${NACOS_USER:nacos}
+      password: ${NACOS_PASSWORD:nacos}
       discovery:
-        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
         group: DEFAULT_GROUP
       config:
-        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
         group: DEFAULT_GROUP
         file-extension: yaml
-        username: nacos
-        password: nacos
+        username: ${NACOS_USER:nacos}
+        password: ${NACOS_PASSWORD:nacos}

@@ -1,0 +1,67 @@
+server:
+  port: 9011
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+spring:
+  application:
+    name: shopping_pay_service
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://__MYSQL_HOST__:3306/baizhanshopping?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: __MYSQL_PASSWORD__
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      table-prefix: bz_
+      id-type: auto
+wxpay:
+  mch-id: "__WXPAY_MCH_ID__"
+  mch-serial-no: "__WXPAY_MCH_SERIAL_NO__"
+  private-key-path: ${user.home}/.shopping/wxpay/apiclient_key.pem
+  api-v3-key: "__WXPAY_API_V3_KEY__"
+  appid: "__WXPAY_APPID__"
+  domain: https://api.mch.weixin.qq.com
+  notify-domain: __WXPAY_NOTIFY_DOMAIN__
+dubbo:
+  application:
+    name: shopping_pay_service
+    qos-enable: false
+    serialize-check-status: DISABLE
+  protocol:
+    name: dubbo
+    port: -1
+    # 多网卡机器建议显式指定注册 IP，否则 Dubbo 可能选到错误的网卡
+    host: __DUBBO_HOST__
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+
+# ===== Seata (client side) =====
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: mujinyu_tx_group
+  enable-auto-data-source-proxy: true
+  service:
+    disable-global-transaction: false
+    vgroup-mapping:
+      mujinyu_tx_group: default
+  registry:
+    type: redis
+    redis:
+      server-addr: __INFRA_HOST__:6379
+      db: 0
+      timeout: 3000
+  config:
+    type: file
+  client:
+    rm:
+      report-success-enable: false

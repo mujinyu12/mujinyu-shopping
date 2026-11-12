@@ -1,0 +1,32 @@
+# 端口号
+server:
+  port: 8005
+
+# 日志格式
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  application:
+    name: shopping_cart_customer_api
+
+# Dubbo
+dubbo:
+  application:
+    name: shopping_cart_customer_api
+    qos-enable: false
+    serialize-check-status: DISABLE
+    check-serializable: false
+  protocol:
+    name: dubbo
+    port: -1
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+  consumer:
+    check: false
+    timeout: 5000

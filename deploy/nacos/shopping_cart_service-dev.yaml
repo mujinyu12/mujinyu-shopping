@@ -1,0 +1,47 @@
+# 端口号
+server:
+  port: 9009
+
+# 日志格式
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  application:
+    name: shopping_cart_service
+  # redis
+  data:
+   redis:
+    host: __INFRA_HOST__
+    port: 6379
+    timeout: 30000
+    jedis:
+     pool:
+      max-idle: 8
+      max-wait: -1
+      max-active: 8
+      min-idle: 0
+
+# Dubbo
+dubbo:
+  application:
+    name: shopping_cart_service
+    qos-enable: false
+    serialize-check-status: DISABLE
+    check-serializable: false
+  protocol:
+    name: dubbo
+    port: -1
+    # 多网卡机器建议显式指定注册 IP，否则 Dubbo 可能选到错误的网卡
+    host: __DUBBO_HOST__
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+#rocketmq
+rocketmq:
+  #nameserver地址
+  name-server: __INFRA_HOST__:9876

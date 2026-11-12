@@ -1,0 +1,43 @@
+# ==================== 端口号 ====================
+server:
+  port: 8007
+
+# ==================== 日志格式 ====================
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  cloud:
+    sentinel:
+      transport:
+        client-ip: __DUBBO_HOST__
+        dashboard: __INFRA_HOST__:8070
+        port: 8720
+      eager: true
+
+# ==================== Dubbo ====================
+dubbo:
+  application:
+    name: shopping_seckill_customer_api
+    # 关闭 Dubbo QoS 端口（22222），多服务同机启动时避免端口冲突
+    qos-enable: false
+    # 关闭序列化检查，避免 POJO 未实现 Serializable 时调用被拦截
+    serialize-check-status: DISABLE
+    check-serializable: false
+  protocol:
+    name: dubbo
+    # -1 表示自动选择可用端口，避免多实例端口冲突
+    port: -1
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    # namespace 必须放在 parameters 下，不能拼进 address
+    # 不指定会注册/订阅到 public，与 goods_service 的命名空间不一致，导致找不到提供者
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+  # 消费方：开发阶段 goods_service 未启动时不影响本服务启动
+  consumer:
+    check: false
+    timeout: 5000

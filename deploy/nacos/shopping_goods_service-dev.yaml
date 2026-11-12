@@ -1,0 +1,54 @@
+# 端口号
+server:
+  port: 9001
+
+# 日志格式
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  application:
+    name: shopping_goods_service
+  # 数据源
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://__MYSQL_HOST__:3306/baizhanshopping?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: __MYSQL_PASSWORD__
+
+# Dubbo
+dubbo:
+  application:
+    name: shopping_goods_service
+    serialize-check-status: DISABLE
+    check-serializable: false
+  protocol:
+    name: dubbo
+    port: -1
+    # 多网卡机器建议显式指定注册 IP，否则 Dubbo 可能选到错误的网卡
+    host: __DUBBO_HOST__
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+
+# MyBatis-Plus
+mybatis-plus:
+  global-config:
+    db-config:
+      table-prefix: bz_
+      id-type: auto
+  configuration:
+    map-underscore-to-camel-case: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+rocketmq:
+  #nameserver地址
+  name-server: __INFRA_HOST__:9876
+  producer:
+    #生产组
+    group: my_group1
+    # 发送消息的时间
+    send-message-timeout: 3000

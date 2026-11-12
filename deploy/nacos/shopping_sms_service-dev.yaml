@@ -1,0 +1,37 @@
+# 端口号
+server:
+  port: 9005
+
+# 日志格式
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  application:
+    name: shopping_sms_service
+
+# 短信通道开关：true=只打日志（学习用，不花钱）；false=走阿里云短信
+sms:
+  mock: true
+  # 是否把验证码打到日志（仅 dev 调试用，生产必须是 false）
+  log-code: true
+
+# Dubbo
+dubbo:
+  application:
+    name: shopping_sms_service
+    qos-enable: false
+    serialize-check-status: DISABLE
+    check-serializable: false
+  protocol:
+    name: dubbo
+    port: -1
+    # 多网卡机器建议显式指定注册 IP，否则 Dubbo 可能选到错误的网卡
+    host: __DUBBO_HOST__
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    parameters:
+      namespace: __NACOS_NAMESPACE__

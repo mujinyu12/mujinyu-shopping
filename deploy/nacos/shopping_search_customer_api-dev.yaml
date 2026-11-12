@@ -1,0 +1,31 @@
+# 端口号
+server:
+  port: 8004
+
+# 日志格式
+logging:
+  pattern:
+   console: '%d{HH:mm:ss.SSS} %clr(%-5level) ---  [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  application:
+   name: shopping_search_customer_api #服务名
+  cloud:
+   nacos:
+    discovery:
+     server-addr: __INFRA_HOST__:8848 # 注册中心地址
+  
+dubbo:
+  application:
+   name: shopping_search_customer_api # 项目名
+   serialize-check-status: DISABLE
+   check-serializable: false
+  protocol:
+   name: dubbo # 通讯协议
+   port: -1 # 端口号，-1表示自动扫描可用端口。
+  registry:
+   address: nacos://__INFRA_HOST__:8848 # 注册中心
+   username: nacos
+   password: __NACOS_PASSWORD__
+   parameters:
+    namespace: __NACOS_NAMESPACE__

@@ -23,36 +23,36 @@ spring:
   # SCA 2025 的搜索前缀由 SPI 决定：有 nacos-* starter 时用 spring.cloud.nacos，
   # 否则回落 spring.nacos。两种写法保持同值，避免类路径变化导致配置失效
   nacos:
-    server-addr: 192.168.66.100:8848
-    username: nacos
-    password: nacos
+    server-addr: ${NACOS_ADDR:192.168.66.100:8848}
+    username: ${NACOS_USER:nacos}
+    password: ${NACOS_PASSWORD:nacos}
     discovery:
-      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
       group: DEFAULT_GROUP
       # 显式指定注册 IP，不写会取到 VMnet1(192.168.28.1)，虚拟机上的 Higress 访问不到
       ip: 192.168.66.10
     config:
-      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
       group: DEFAULT_GROUP
       file-extension: yaml
       # NacosConfigProperties 的绑定前缀是 <prefix>.config，凭证必须写在这一层
-      username: nacos
-      password: nacos
+      username: ${NACOS_USER:nacos}
+      password: ${NACOS_PASSWORD:nacos}
   cloud:
     nacos:
-      server-addr: 192.168.66.100:8848
-      username: nacos
-      password: nacos
+      server-addr: ${NACOS_ADDR:192.168.66.100:8848}
+      username: ${NACOS_USER:nacos}
+      password: ${NACOS_PASSWORD:nacos}
       discovery:
-        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
         group: DEFAULT_GROUP
         ip: 192.168.66.10
       config:
-        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
         group: DEFAULT_GROUP
         file-extension: yaml
-        username: nacos
-        password: nacos
+        username: ${NACOS_USER:nacos}
+        password: ${NACOS_PASSWORD:nacos}
 dubbo:
   consumer:
     timeout: 5000

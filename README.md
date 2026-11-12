@@ -114,7 +114,11 @@
 
 ### 2. 配置
 
-**所有配置都在 Nacos，不在仓库里**。每个模块的 `src/main/resources/application.yml` 只保存注册中心地址与 `spring.config.import`，业务配置（数据源、Redis、Dubbo、第三方密钥）全部从 Nacos 拉取：
+**所有业务配置都在 Nacos**。每个模块的 `src/main/resources/application.yml` 只保留服务名、端口、Nacos 地址和 `spring.config.import`，数据源、Redis、Dubbo、第三方密钥全部从 Nacos 拉取：
+
+- Nacos 地址与凭证已参数化，可用环境变量覆盖：`NACOS_ADDR`、`NACOS_USER`、`NACOS_PASSWORD`、`NACOS_NAMESPACE`（不设置时用默认值）
+- `deploy/nacos/` 提供 22 个模块的配置模板，占位符说明见 `deploy/nacos/README.md`
+- 一条命令批量导入：`powershell -ExecutionPolicy Bypass -File scripts/import-nacos.ps1 -Namespace 你的命名空间 -InfraHost 你的中间件IP -MysqlPassword 你的数据库密码`
 
 ```yaml
 spring:
@@ -132,7 +136,7 @@ shopping_pay_service-dev.yaml
 ...
 ```
 
-配置内容就是各模块原本写在 `application.yml` 里的业务部分：数据源（Druid + MySQL）、Redis、Dubbo（协议端口与注册地址）、Elasticsearch、RocketMQ、MinIO、AI 模型与微信支付参数。由于其中包含数据库密码、Redis 密码、微信商户号与 APIv3 密钥，仓库不附带现成配置，需要按模块补齐。
+配置内容就是各模块原本写在 `application.yml` 里的业务部分：数据源（Druid + MySQL）、Redis、Dubbo（协议端口与注册地址）、Elasticsearch、RocketMQ、MinIO、AI 模型与微信支付参数。这些内容在 `deploy/nacos/` 里以占位符模板形式提供，密码与密钥在导入时注入，不进入仓库。
 
 > ⚠️ 密钥（数据库密码、Redis 密码、微信商户号与私钥、MinIO 账号）只存在于 Nacos 配置和部署机上的 `~/.shopping/wxpay/apiclient_key.pem`，**没有**进入本仓库。
 

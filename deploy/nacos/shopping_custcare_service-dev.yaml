@@ -1,0 +1,135 @@
+server:
+  port: 9013
+
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  application:
+    name: shopping_custcare_service
+
+  # 数据源：与 order_service / user_service 用同一个库，
+  # 以后要存客服会话就建 bz_custcare_message 之类的表（mybatis-plus 会自动加 bz_ 前缀）
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://__MYSQL_HOST__:3306/baizhanshopping?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: __MYSQL_PASSWORD__
+
+  # ===== Redis：客服对话记忆（缺陷 34 改为 Redis 持久化，key = custcare:memory:{conversationId}）=====
+  data:
+    redis:
+      host: __INFRA_HOST__
+      port: 6379
+      database: 1
+      timeout: 3s
+
+  # ===== 大模型：通义千问 via DashScope 的 OpenAI 兼容接口 =====
+  # 不用 spring.ai.dashscope 的原因：它的原生 API 不支持 qwen3.8-max（报 400 url error）
+  ai:
+    openai:
+      # 只写到 /compatible-mode，千万不要带 /v1 —— starter 自己会拼 /v1/chat/completions
+      base-url: https://dashscope.aliyuncs.com/compatible-mode
+      # 真实 key 不写在配置里，由 IDEA Run Configuration 注入环境变量 DASHSCOPE_API_KEY
+      api-key: ${DASHSCOPE_API_KEY:}
+      chat:
+        options:
+          model: qwen3.8-max
+          temperature: 0.7
+          top-p: 0.8
+      # 向量化模型：维度必须和集合一致。当前集合 common_response 实测是 1024 维，
+      # 所以这里也必须是 1024（v4 支持 1024/1536，改维度必须删集合重建，否则写入会报向量维度不匹配）
+      embedding:
+        base-url: https://dashscope.aliyuncs.com/compatible-mode
+        api-key: ${DASHSCOPE_API_KEY:}
+        options:
+          model: text-embedding-v4
+          dimensions: 1024
+
+    vectorstore:
+      qdrant:
+        host: __INFRA_HOST__
+        port: 6334              # 必须 6334（gRPC）。6333 是 REST 端口，Spring AI 连不上
+        collection-name: common_response
+        # 集合不存在时按 EmbeddingModel 的维度自动建；已存在则跳过，不会重建
+        initialize-schema: true
+        use-tls: false
+
+mybatis-plus:
+  global-config:
+    db-config:
+      table-prefix: bz_
+      id-type: auto
+  configuration:
+    map-underscore-to-camel-case: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+dubbo:
+  application:
+    name: shopping_custcare_service
+    qos-enable: false
+    serialize-check-status: DISABLE
+  protocol:
+    name: dubbo
+    port: -1
+    # 多网卡机器建议显式指定注册 IP，否则 Dubbo 可能选到错误的网卡
+    host: __DUBBO_HOST__
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+
+# 客服自己的业务配置（代码里用 @Value("${custcare.system-prompt}") 读取）
+custcare:
+  # 人设与规则。改完在 Nacos 点发布即可热更新，不用重启服务。
+  # 注意 {current_date} 是占位符：静态配置里没法自动取当天日期，
+  # 需要在代码里做一次替换 —— prompt.replace("{current_date}", LocalDate.now().toString())
+  system-prompt: |
+    角色与使命
+    你是“慕今予商城”的AI客服助手“小予”。你的核心使命是提供准确、高效、友好且专业的客户服务，提升用户购物体验，并最终促进问题解决和客户满意。
+
+    核心能力与原则
+    1. 身份认知：你必须始终记住自己是“慕今予商城”的客服，不能声称自己是其他公司或通用AI模型。
+    2. 友好与共情：始终保持热情、耐心和有礼貌的态度，使用“您”“请”“抱歉”“感谢”等敬语；对用户遇到的问题表示理解和共情（例如：“非常理解您焦急的心情”）。
+    3. 精准与简洁：回答需紧扣用户问题，提供清晰、直接的信息，避免冗长和不相关的解释。
+    4. 安全边界：
+       - 绝对禁止编造公司政策、活动信息或商品详情。如果信息不确定，必须引导用户通过其他渠道确认。
+       - 绝不获取或询问用户的敏感个人信息（如密码、完整银行卡号、短信验证码）。
+       - 如果用户问题超出你的知识范围或客服职责（如深度闲聊、其他公司业务），应礼貌地告知能力边界并引导回电商主题。
+
+    信息处理规范
+    1. 订单查询：用户查询订单状态（如物流、商品数量）时，应先提醒并引导用户提供订单号，再根据提供的信息解答。可以描述一般的物流状态流程（已下单、已发货、配送中、已签收）。
+    2. 退换货与退款：清晰说明通用的退换货流程（联系客服申请 → 审核通过 → 寄回商品 → 仓库质检 → 退款/换货）；强调需要“保持商品完好、配件齐全”等前提条件；必须说明具体时效和政策可能因商品类别而异，建议用户以售后专员的确认为准。
+    3. 商品咨询：根据用户提供的商品名称或描述，提供商品的功能、规格等通用信息。必须提醒：商品详情（如价格、库存）请以页面显示为准，你可能无法获取实时数据。
+    4. 优惠与活动：介绍当前常见的优惠类型（如新人券、满减活动）。必须强调：活动的参与条件和最终解释权归公司所有，建议用户查看活动页面具体规则。
+    5. 问题升级：当遇到复杂或无法解决的问题（如重大投诉、技术故障）时，应主动告知用户“我将为您转接人工客服以获得更专业的帮助”，并提供转接路径（如：“您可以在商城App内点击‘我的 → 联系客服’直接找到人工服务”）。
+
+    对话开场与结束
+    开场：主动问候并表明身份。例如：“您好！我是慕今予商城的AI客服小予，很高兴为您服务。请问有什么可以帮您？”
+    结束：在确认用户问题已解决或已提供后续步骤后，友好结束对话。例如：“请问还有其他可以帮您的吗？”如果没有，则“感谢您的咨询，祝您生活愉快！再见！”
+
+    当前背景信息
+    今天的日期是：{current_date}
+    公司名称：慕今予商城
+    你的名字：小予
+
+    请严格遵守以上指令，开始与用户对话。
+  # 每个会话保留多少轮历史（存内存；要跨重启/多实例就换 Redis）
+  history-size: 10
+  # ===== 向量检索（RAG）参数 =====
+  rag:
+    # 相似度阈值（0~1，越大越严格）。注意：这不是 Spring Boot 的自动配置项，
+    # 而是代码里 SearchRequest.similarityThreshold(...) 的参数，必须自己读这个键再传进去。
+    # 实测 text-embedding-v4（1024 维）+ 5 条 FAQ：相关问题 top1 = 0.51~0.68，无关问题 = 0.28~0.33，
+    # 0.45 正好落在两簇之间的空隙里。FAQ 数量变多、句子变长后分数会整体上移，可再上调到 0.5~0.55。
+    score-threshold: 0.62
+    # 取几条 FAQ 拼进 prompt。取 3 而不是 1：阈值只保证"像"，不保证"对"
+    # （实测"买了不想要了怎么退"，top1 命中秒杀规则 0.51 分，真正的退货政策 0.49 掉到 top2）
+    top-k: 3
+    # 一条 FAQ 最多注入多少字符，防止 prompt 过长
+    max-context-chars: 1500
+    # 检索不到任何超过阈值的 FAQ 时的兜底话术
+    fallback-reply: 抱歉，这个问题我暂时没有找到答案，已为您转接人工客服，请稍等。

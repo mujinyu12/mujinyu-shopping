@@ -25,35 +25,35 @@ spring:
   # 前缀是 spring.cloud.nacos，否则回落为 spring.nacos。两种写法保持同值，避免类路径变化导致配置失效。
   # 注意：spring.config.import 导入的配置优先级低于本文件，此处写任何同名业务配置都会静默覆盖 Nacos
   nacos:
-    server-addr: 192.168.66.100:8848
-    username: nacos
-    password: nacos
+    server-addr: ${NACOS_ADDR:192.168.66.100:8848}
+    username: ${NACOS_USER:nacos}
+    password: ${NACOS_PASSWORD:nacos}
     discovery:
-      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
       group: DEFAULT_GROUP
       # 显式指定注册到 Nacos 的 IP。不写时 Nacos 客户端会取本机默认网卡，
       # 在装了 VMware 的 Windows 上可能取到 VMnet1(192.168.28.1)，虚拟机访问不到。
       ip: 192.168.66.10
     config:
-      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
       group: DEFAULT_GROUP
       file-extension: yaml
       # NacosConfigProperties 的绑定前缀是 <prefix>.config，凭证必须写在这一层
-      username: nacos
-      password: nacos
+      username: ${NACOS_USER:nacos}
+      password: ${NACOS_PASSWORD:nacos}
   cloud:
     nacos:
-      server-addr: 192.168.66.100:8848
-      username: nacos
-      password: nacos
+      server-addr: ${NACOS_ADDR:192.168.66.100:8848}
+      username: ${NACOS_USER:nacos}
+      password: ${NACOS_PASSWORD:nacos}
       discovery:
-        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
         group: DEFAULT_GROUP
         ip: 192.168.66.10
       config:
-        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        namespace: ${NACOS_NAMESPACE:8ae3393c-2080-4209-87a9-b3a5a948d68f}
         group: DEFAULT_GROUP
         file-extension: yaml
         # 同上：配置中心凭证只认 spring.cloud.nacos.config.username/password
-        username: nacos
-        password: nacos
+        username: ${NACOS_USER:nacos}
+        password: ${NACOS_PASSWORD:nacos}

@@ -1,0 +1,54 @@
+# ==================== 端口号 ====================
+server:
+  port: 8006
+
+# ==================== 日志格式 ====================
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+# ==================== Dubbo ====================
+dubbo:
+  application:
+    name: shopping_order_customer_api
+    # 关闭序列化检查，避免 POJO 未实现 Serializable 时调用被拦截
+    serialize-check-status: DISABLE
+    check-serializable: false
+  protocol:
+    name: dubbo
+    # -1 表示自动选择可用端口，避免多实例端口冲突
+    port: -1
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    # namespace 必须放在 parameters 下，不能拼进 address
+    # 不指定会注册/订阅到 public，与 goods_service 的命名空间不一致，导致找不到提供者
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+  # 消费方：开发阶段 goods_service 未启动时不影响本服务启动
+  consumer:
+    check: false
+    timeout: 5000
+
+# ===== Seata (client side) =====
+seata:
+  enabled: true
+  application-id: ${spring.application.name}
+  tx-service-group: mujinyu_tx_group
+  enable-auto-data-source-proxy: true
+  service:
+    disable-global-transaction: false
+    vgroup-mapping:
+      mujinyu_tx_group: default
+  registry:
+    type: redis
+    redis:
+      server-addr: __INFRA_HOST__:6379
+      db: 0
+      timeout: 3000
+  config:
+    type: file
+  client:
+    rm:
+      report-success-enable: false

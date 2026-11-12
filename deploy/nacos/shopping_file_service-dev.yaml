@@ -1,0 +1,49 @@
+# ============================================================
+# Nacos dataId : shopping_file_service.yaml
+# namespace    : __NACOS_NAMESPACE__
+# group        : DEFAULT_GROUP
+# ============================================================
+
+server:
+  port: 9003          # 纯 Dubbo 提供者，无 Web 容器，此端口实际不会监听
+
+logging:
+  pattern:
+    console: '%d{HH:mm:ss.SSS} %clr(%-5level) --- [%-15thread] %cyan(%-50logger{50}):%msg%n'
+
+spring:
+  application:
+    name: shopping_file_service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: __INFRA_HOST__:8848
+        username: nacos
+        password: __NACOS_PASSWORD__
+        namespace: __NACOS_NAMESPACE__
+        group: DEFAULT_GROUP
+
+dubbo:
+  application:
+    name: shopping_file_service
+    serialize-check-status: DISABLE
+    check-serializable: false      # 3.3.0 已无此字段，写不写都不生效
+    qos-enable: false              # 避免多服务抢 22222
+  protocol:
+    name: dubbo
+    port: -1
+    # 多网卡机器建议显式指定注册 IP，否则 Dubbo 可能选到错误的网卡
+    host: __DUBBO_HOST__
+  registry:
+    address: nacos://__INFRA_HOST__:8848
+    username: nacos
+    password: __NACOS_PASSWORD__
+    parameters:
+      namespace: __NACOS_NAMESPACE__
+
+minio:
+  endpoint: http://__INFRA_HOST__:9100
+  accessKey: __MINIO_ACCESS_KEY__            # ★ 大小写
+  secretKey: __MINIO_SECRET_KEY__
+  bucket: shopping
+  fileUrl: http://__INFRA_HOST__:9100/shopping
