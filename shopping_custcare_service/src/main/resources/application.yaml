@@ -1,0 +1,39 @@
+spring:
+  application:
+    # 本地必须保留服务名：Nacos 的 dataId 就是用它拼出来的
+    name: shopping_custcare_service
+  profiles:
+    active: dev
+  # Spring Cloud 2025 用 spring.config.import 加载 Nacos 配置；
+  # 引了 nacos-config 却不写这行，启动会直接报 "No spring.config.import property has been defined"
+  config:
+    import:
+      - optional:nacos:shopping_custcare_service.yaml
+      - optional:nacos:shopping_custcare_service-dev.yaml
+  cloud:
+    nacos:
+      server-addr: 192.168.66.100:8848
+      username: nacos
+      password: nacos
+      discovery:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+        # 本机有多块网卡（VMnet1 是 192.168.28.1、VMnet8 是 192.168.66.10），
+        # 不指定时 Nacos 客户端会注册成 192.168.28.1，虚拟机上的网关访问不到
+        ip: 192.168.66.10
+      config:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        # NacosConfigProperties 的绑定前缀是 <prefix>.config，凭证必须写在这一层；
+        # 只写在根级时配置中心客户端不带账号密码，开启鉴权的服务端会返回 401 User not found
+        username: nacos
+        password: nacos
+
+# 业务配置（datasource / mybatis-plus / dubbo / spring.ai.openai / custcare）
+# 全部放在 Nacos 的 shopping_custcare_service-dev.yaml 里，改模型、换 API Key 都不用重新打包
+#
+# 大模型走的是「OpenAI 兼容模式」：
+#   spring.ai.openai.base-url = https://dashscope.aliyuncs.com/compatible-mode
+#   spring.ai.openai.api-key  = ${DASHSCOPE_API_KEY}   ← 在 IDEA 的 Run Configuration 里注入
+#   spring.ai.openai.chat.options.model = qwen3.8-max

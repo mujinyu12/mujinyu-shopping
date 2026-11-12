@@ -1,0 +1,27 @@
+# 支付服务本地引导配置：业务配置全部放在 Nacos 的 shopping_pay_service(-dev).yaml 里
+server:
+  port: 9011
+
+spring:
+  application:
+    name: shopping_pay_service
+  profiles:
+    active: dev
+  config:
+    import:
+      - optional:nacos:shopping_pay_service.yaml
+      - optional:nacos:shopping_pay_service-dev.yaml
+  cloud:
+    nacos:
+      server-addr: 192.168.66.100:8848
+      username: nacos
+      password: nacos
+      discovery:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+      config:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        username: nacos
+        password: nacos

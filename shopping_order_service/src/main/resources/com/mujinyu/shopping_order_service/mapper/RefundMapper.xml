@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mujinyu.shopping_order_service.mapper.RefundMapper">
+
+    <!-- 项目全局 map-underscore-to-camel-case=false，这里必须显式映射下划线列名 -->
+    <resultMap id="refundMapper" type="com.mujinyu.shopping_common.pojo.Refund">
+        <id property="id" column="id"/>
+        <result property="orderId" column="order_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="refundNo" column="refund_no"/>
+        <result property="transactionId" column="transaction_id"/>
+        <result property="wxRefundId" column="wx_refund_id"/>
+        <result property="amount" column="amount"/>
+        <result property="reason" column="reason"/>
+        <result property="status" column="status"/>
+        <result property="orderStatusBefore" column="order_status_before"/>
+        <result property="auditBy" column="audit_by"/>
+        <result property="auditTime" column="audit_time"/>
+        <result property="auditRemark" column="audit_remark"/>
+        <result property="createTime" column="create_time"/>
+        <result property="successTime" column="success_time"/>
+    </resultMap>
+
+    <select id="findByOrderId" resultMap="refundMapper">
+        SELECT * FROM bz_refund WHERE order_id = #{orderId} LIMIT 1
+    </select>
+
+    <select id="findPage" resultMap="refundMapper">
+        SELECT * FROM bz_refund
+        <where>
+            <if test="status != null">status = #{status}</if>
+        </where>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT COUNT(*) FROM bz_refund
+        <where>
+            <if test="status != null">status = #{status}</if>
+        </where>
+    </select>
+
+    <update id="reopen">
+        UPDATE bz_refund
+        SET status = 0,
+            refund_no = #{refundNo},
+            amount = #{amount},
+            reason = #{reason},
+            order_status_before = #{orderStatusBefore},
+            audit_by = NULL,
+            audit_time = NULL,
+            audit_remark = NULL,
+            wx_refund_id = NULL,
+            transaction_id = NULL,
+            success_time = NULL,
+            create_time = NOW()
+        WHERE id = #{id} AND status IN (3, 4)
+    </update>
+
+    <update id="markProcessing">
+        UPDATE bz_refund
+        SET status = 1, audit_by = #{auditBy}, audit_time = #{auditTime}
+        WHERE id = #{id} AND status IN (0, 1) AND wx_refund_id IS NULL
+    </update>
+
+    <update id="markRejected">
+        UPDATE bz_refund
+        SET status = 3, audit_by = #{auditBy}, audit_time = #{auditTime}, audit_remark = #{remark}
+        WHERE id = #{id} AND status = 0
+    </update>
+
+    <update id="fillWxRefundId">
+        UPDATE bz_refund
+        SET wx_refund_id = #{wxRefundId},
+            transaction_id = COALESCE(#{transactionId}, transaction_id)
+        WHERE id = #{id} AND status = 1
+    </update>
+
+    <update id="markFailed">
+        UPDATE bz_refund
+        SET status = 4, audit_remark = #{remark}
+        WHERE id = #{id} AND status IN (0, 1)
+    </update>
+
+    <update id="markSuccess">
+        UPDATE bz_refund
+        SET status = 2, success_time = #{successTime}
+        WHERE id = #{id} AND status = 1
+    </update>
+</mapper>

@@ -1,0 +1,31 @@
+server:
+  port: 9003
+
+spring:
+  application:
+    # 本地必须保留服务名：Nacos 的 dataId 就是用它拼出来的
+    name: shopping_order_service
+  profiles:
+    active: dev
+  # Spring Cloud 2025 用 spring.config.import 加载 Nacos 配置
+  # 没有这一行，nacos-config 的 starter 会直接拒绝启动
+  config:
+    import:
+      - optional:nacos:shopping_order_service.yaml
+      - optional:nacos:shopping_order_service-dev.yaml
+  cloud:
+    nacos:
+      server-addr: 192.168.66.100:8848
+      username: nacos
+      password: nacos
+      discovery:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+      config:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        # NacosConfigProperties 的绑定前缀是 <prefix>.config，凭证必须写在这一层；
+        # 只写在根级时配置中心客户端不带账号密码，开启鉴权的服务端会返回 401 User not found
+        username: nacos
+        password: nacos

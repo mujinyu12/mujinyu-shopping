@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.mujinyu</groupId>
+    <artifactId>shopping</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <!-- 子模块 -->
+    <modules>
+        <!-- 通用模块，包含实体类，服务接口，工具类等 -->
+        <module>shopping_common</module>
+        <!-- 商品服务 -->
+        <module>shopping_goods_service</module>
+        <!-- 管理员管理网站操作的Api -->
+        <module>shopping_manager_api</module>
+        <!-- 管理员服务 -->
+        <module>shopping_admin_service</module>
+        <!-- 文件服务 -->
+        <module>shopping_file_service</module>
+        <!-- 广告服务 -->
+        <module>shopping_category_service</module>
+        <!-- 网站用户操作广告的API -->
+        <module>shopping_category_customer_api</module>
+        <!-- 搜索服务 -->
+        <module>shopping_search_service</module>
+        <!-- 用户搜索的api -->
+        <module>shopping_search_customer_api</module>
+        <!-- 短信服务（当前为 Mock 实现，不真正发短信） -->
+        <module>shopping_sms_service</module>
+        <!-- 用户服务 -->
+        <module>shopping_user_service</module>
+        <!-- 用户api -->
+        <module>shopping_user_customer_api</module>
+        <!-- 购物车服务 -->
+        <module>shopping_cart_service</module>
+        <!-- 购物车api -->
+        <module>shopping_cart_customer_api</module>
+        <!-- 订单服务 -->
+        <module>shopping_order_service</module>
+        <!-- 订单api -->
+        <module>shopping_order_customer_api</module>
+        <!-- 支付服务 -->
+        <module>shopping_pay_service</module>
+        <!-- 秒杀服务 -->
+        <module>shopping_seckill_service</module>
+        <!-- 秒杀api -->
+        <module>shopping_seckill_customer_api</module>
+        <!-- 网络钩子 -->
+        <module>shopping_webhooks</module>
+        <!-- 邮件服务模块 -->
+        <module>shopping_mail_service</module>
+        <!-- AI客服服务 -->
+        <module>shopping_custcare_service</module>
+        <!-- 用户使用AI客服的API -->
+        <module>shopping_custcare_customer_api</module>
+    </modules>
+
+
+    <properties>
+        <java.version>17</java.version>
+        <dubbo.version>3.3.0</dubbo.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <spring-boot.version>3.5.4</spring-boot.version>
+        <spring-cloud.version>2025.0.0</spring-cloud.version>
+        <spring-cloud-alibaba.version>2025.0.0.0</spring-cloud-alibaba.version>
+        <lombok.version>1.18.32</lombok.version>
+        <mybatis-plus.version>3.5.12</mybatis-plus.version>
+        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <!-- 编译时保留方法参数名（javac -parameters），Spring MVC、MyBatis 反射取参数名都依赖它 -->
+        <maven.compiler.parameters>true</maven.compiler.parameters>
+        <jose4j.version>0.7.0</jose4j.version>
+        <!-- sensitive-word 没有 1.x 版本，中央仓库当前最新为 0.29.5 -->
+        <sensitive-word.version>0.29.5</sensitive-word.version>
+        <!-- Seata 2.5.0 的 redis 注册中心是按 jedis 3.8.0（provided）编译的，
+             必须与 seata-all 里声明的版本保持一致；Boot BOM 里的 jedis 5.x 构造器已变，会 NoSuchMethodError -->
+        <jedis.version>3.8.0</jedis.version>
+    </properties>
+
+    <!-- 依赖版本声明 -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Cloud版本-->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Spring Cloud Alibaba版本 -->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>${spring-cloud-alibaba.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- SpringBoot版本 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- Dubbo版本 -->
+            <dependency>
+                <groupId>org.apache.dubbo</groupId>
+                <artifactId>dubbo-bom</artifactId>
+                <version>${dubbo.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- lombok版本 -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+
+            <!-- mybatis-plus -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <!-- 分页等需要解析 SQL 的插件，3.5.9 起从 extension 拆成独立模块 -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-jsqlparser</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+
+            <!-- jedis：seata-all 以 provided 方式依赖，使用 redis 注册中心时须由业务模块自己补 -->
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${jedis.version}</version>
+            </dependency>
+
+            <!-- 敏感词过滤：shopping_custcare_service 使用 -->
+            <dependency>
+                <groupId>com.github.houbb</groupId>
+                <artifactId>sensitive-word</artifactId>
+                <version>${sensitive-word.version}</version>
+            </dependency>
+
+            <!-- jwt 签名/验签：common 验签与 user_service 签发共用同一版本 -->
+            <dependency>
+                <groupId>org.bitbucket.b_c</groupId>
+                <artifactId>jose4j</artifactId>
+                <version>${jose4j.version}</version>
+            </dependency>
+
+            <!-- 内部模块版本统一管理 -->
+            <dependency>
+                <groupId>com.mujinyu</groupId>
+                <artifactId>shopping_common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- 通用依赖 -->
+    <dependencies>
+    </dependencies>
+
+    <!-- 插件 -->
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-maven-plugin</artifactId>
+                    <version>${spring-boot.version}</version>
+                    <configuration>
+                        <!-- 避免 Nacos 中文配置在 GBK 默认字符集下解析失败 -->
+                        <jvmArguments>-Dfile.encoding=UTF-8</jvmArguments>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <!-- 测试 JVM 沿用 file.encoding：JDK17 在中文 Windows 默认 GBK，
+                     会把 Nacos 里 UTF-8 的中文配置解析成 MalformedInputException -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Dfile.encoding=UTF-8</argLine>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${maven-compiler-plugin.version}</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <!-- 不写的话 @RequestParam/@PathVariable 不指定 name 时会报 Name for argument not specified -->
+                    <parameters>true</parameters>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- 依赖仓库路径 -->
+    <repositories>
+        <repository>
+            <id>public</id>
+            <name>aliyun nexus</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+    </repositories>
+
+    <!-- 插件仓库路径 -->
+    <pluginRepositories>
+        <pluginRepository>
+            <id>public</id>
+            <name>aliyun nexus</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+</project>

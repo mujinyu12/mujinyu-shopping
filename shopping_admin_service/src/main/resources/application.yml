@@ -1,0 +1,41 @@
+spring:
+  application:
+    name: shopping_admin_service
+  profiles:
+    active: dev
+  # Spring Cloud 2025 ?? spring.config.import ?? Nacos ???bootstrap.yml ???
+  config:
+    import:
+      - optional:nacos:shopping_admin_service.yaml
+      - optional:nacos:shopping_admin_service-dev.yaml
+  # SCA 2025 ?????? SPI ???classpath ?? spring-cloud-starter-alibaba-nacos-* starter ?
+  # ??? spring.cloud.nacos?????? spring.nacos????????????????????????
+  nacos:
+    server-addr: 192.168.66.100:8848
+    username: nacos
+    password: nacos
+    discovery:
+      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      group: DEFAULT_GROUP
+    config:
+      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      group: DEFAULT_GROUP
+      file-extension: yaml
+      # NacosConfigProperties 的绑定前缀是 <prefix>.config，凭证必须写在这一层
+      username: nacos
+      password: nacos
+  cloud:
+    nacos:
+      server-addr: 192.168.66.100:8848
+      username: nacos
+      password: nacos
+      discovery:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+      config:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        # 同上：配置中心凭证只认 spring.cloud.nacos.config.username/password
+        username: nacos
+        password: nacos

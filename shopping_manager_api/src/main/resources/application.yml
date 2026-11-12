@@ -1,0 +1,62 @@
+# ============================================================
+# 本地配置文件：只负责连接 Nacos 配置中心 + 声明当前环境
+# 端口、日志格式、Dubbo 等全部运行参数都在 Nacos 的
+# shopping_manager_api.yaml / shopping_manager_api-dev.yaml 中维护
+# ============================================================
+
+spring:
+  application:
+    # dataId 的定位依赖此名字，必须留在本地
+    name: shopping_manager_api
+
+  # 激活的环境，必须放在本地：若写在 Nacos 的 dev 配置里会形成自相矛盾
+  # （要读到 dev 配置才能知道是 dev）。切换环境时改这里或用 -Dspring.profiles.active=prod
+  profiles:
+    active: dev
+
+  # Spring Cloud 2025 使用 spring.config.import 加载 Nacos 配置，bootstrap.yml 已废弃
+  # 后导入的优先级更高，所以 -dev 覆盖主配置；主配置不存在时 optional 会静默跳过
+  config:
+    import:
+      - optional:nacos:shopping_manager_api.yaml
+      - optional:nacos:shopping_manager_api-dev.yaml
+
+  # SCA 2025 的搜索前缀由 SPI 决定：classpath 存在 spring-cloud-starter-alibaba-nacos-* starter 时
+  # 前缀是 spring.cloud.nacos，否则回落为 spring.nacos。两种写法保持同值，避免类路径变化导致配置失效。
+  # 注意：spring.config.import 导入的配置优先级低于本文件，此处写任何同名业务配置都会静默覆盖 Nacos
+  nacos:
+    server-addr: 192.168.66.100:8848
+    username: nacos
+    password: nacos
+    discovery:
+      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      group: DEFAULT_GROUP
+    config:
+      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      group: DEFAULT_GROUP
+      file-extension: yaml
+      # NacosConfigProperties 的绑定前缀是 <prefix>.config，凭证必须写在这一层
+      username: nacos
+      password: nacos
+  cloud:
+    nacos:
+      server-addr: 192.168.66.100:8848
+      username: nacos
+      password: nacos
+      discovery:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+      config:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        # 同上：配置中心凭证只认 spring.cloud.nacos.config.username/password
+        username: nacos
+        password: nacos
+
+dubbo:
+  consumer:
+    timeout: 5000
+    check: false
+  provider:
+    timeout: 5000

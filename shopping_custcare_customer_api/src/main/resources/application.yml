@@ -1,0 +1,61 @@
+# ============================================================
+# 本地配置文件：只负责连接 Nacos 配置中心 + 声明当前环境
+# 端口、Dubbo 超时等运行参数都在 Nacos 的
+# shopping_custcare_customer_api-dev.yaml 中维护
+# ============================================================
+
+spring:
+  application:
+    # dataId 的定位依赖此名字，必须留在本地
+    name: shopping_custcare_customer_api
+
+  # 激活的环境必须放本地：写在 Nacos 的 dev 配置里会自相矛盾
+  profiles:
+    active: dev
+
+  # Spring Cloud 2025 用 spring.config.import 加载 Nacos 配置，bootstrap.yml 已废弃
+  # 后导入的优先级更高，所以 -dev 覆盖主配置；主配置不存在时 optional 静默跳过
+  config:
+    import:
+      - optional:nacos:shopping_custcare_customer_api.yaml
+      - optional:nacos:shopping_custcare_customer_api-dev.yaml
+
+  # SCA 2025 的搜索前缀由 SPI 决定：有 nacos-* starter 时用 spring.cloud.nacos，
+  # 否则回落 spring.nacos。两种写法保持同值，避免类路径变化导致配置失效
+  nacos:
+    server-addr: 192.168.66.100:8848
+    username: nacos
+    password: nacos
+    discovery:
+      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      group: DEFAULT_GROUP
+      # 显式指定注册 IP，不写会取到 VMnet1(192.168.28.1)，虚拟机上的 Higress 访问不到
+      ip: 192.168.66.10
+    config:
+      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      group: DEFAULT_GROUP
+      file-extension: yaml
+      # NacosConfigProperties 的绑定前缀是 <prefix>.config，凭证必须写在这一层
+      username: nacos
+      password: nacos
+  cloud:
+    nacos:
+      server-addr: 192.168.66.100:8848
+      username: nacos
+      password: nacos
+      discovery:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+        ip: 192.168.66.10
+      config:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        username: nacos
+        password: nacos
+dubbo:
+  consumer:
+    timeout: 5000
+    check: false
+  provider:
+    timeout: 5000

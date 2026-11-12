@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mujinyu.shopping_order_service.mapper.OrdersMapper">
+
+    <resultMap id="ordersMapper" type="com.mujinyu.shopping_common.pojo.Orders">
+        <id property="id" column="id"/>
+        <result property="payment" column="payment"/>
+        <result property="paymentType" column="paymentType"/>
+        <result property="postFee" column="postFee"/>
+        <result property="status" column="status"/>
+        <result property="orderType" column="order_type"/>
+        <result property="seckillId" column="seckill_id"/>
+        <result property="createTime" column="createTime"/>
+        <result property="paymentTime" column="paymentTime"/>
+        <result property="consignTime" column="consignTime"/>
+        <result property="endTime" column="endTime"/>
+        <result property="closeTime" column="closeTime"/>
+        <result property="shippingName" column="shippingName"/>
+        <result property="shippingCode" column="shippingCode"/>
+        <result property="userId" column="userId"/>
+        <result property="buyerMessage" column="buyerMessage"/>
+        <result property="buyerNick" column="buyerNick"/>
+        <result property="receiverAreaName" column="receiverAreaName"/>
+        <result property="receiverMobile" column="receiverMobile"/>
+        <result property="receiverZipCode" column="receiverZipCode"/>
+        <result property="receiver" column="receiver"/>
+        <result property="expire" column="expire"/>
+        <collection property="cartGoods" column="orderId" ofType="com.mujinyu.shopping_common.pojo.CartGoods">
+            <result property="goodId" column="goodId"/>
+            <result property="goodsName" column="goodsName"/>
+            <result property="price" column="price"/>
+            <result property="headerPic" column="headerPic"/>
+            <result property="num" column="num"/>
+            <result property="orderId" column="orderId"/>
+        </collection>
+    </resultMap>
+
+    <select id="findById" parameterType="string" resultMap="ordersMapper">
+        SELECT *
+        FROM bz_orders
+                 LEFT JOIN bz_cart_goods ON bz_orders.id = bz_cart_goods.orderId
+        WHERE bz_orders.id = #{id}
+    </select>
+
+    <select id="findOrdersByUserIdAndStatus" resultMap="ordersMapper">
+        SELECT
+        *
+        FROM
+        bz_orders
+        LEFT JOIN bz_cart_goods
+        ON bz_orders.id = bz_cart_goods.orderId
+        <where>
+        bz_orders.userId = #{userId}
+        <if test="status != null">
+            and bz_orders.status = #{status}
+        </if>
+        </where>
+    </select>
+    
+    <update id="markPaidIfUnpaid">
+        UPDATE bz_orders
+        SET status = 2, paymentType = 1, paymentTime = #{paymentTime}
+        WHERE id = #{id} AND status = 1
+    </update>
+
+    <update id="closeIfUnpaid">
+        UPDATE bz_orders
+        SET status = 6, closeTime = NOW()
+        WHERE id = #{id} AND status = 1
+    </update>
+
+    <update id="markRefundingIfPaid">
+        UPDATE bz_orders
+        SET status = 8
+        WHERE id = #{id} AND status IN (2, 3)
+    </update>
+
+    <update id="markRefundedIfRefunding">
+        UPDATE bz_orders
+        SET status = 9, closeTime = NOW()
+        WHERE id = #{id} AND status = 8
+    </update>
+
+    <update id="restoreStatus">
+        UPDATE bz_orders
+        SET status = #{status}
+        WHERE id = #{id} AND status = 8
+    </update>
+
+    <select id="findOrdersPage" resultMap="ordersMapper">
+        SELECT id, payment, paymentType, postFee, status, createTime, paymentTime,
+        consignTime, endTime, closeTime, shippingName, shippingCode, userId,
+        buyerMessage, buyerNick, receiverAreaName, receiverMobile,
+        receiverZipCode, receiver, expire
+        FROM bz_orders
+        <where>
+            userId = #{userId}
+            <if test="status != null">AND status = #{status}</if>
+        </where>
+        ORDER BY createTime DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countUserOrders" resultType="long">
+        SELECT COUNT(*) FROM bz_orders
+        <where>
+            userId = #{userId}
+            <if test="status != null">AND status = #{status}</if>
+        </where>
+    </select>
+</mapper>

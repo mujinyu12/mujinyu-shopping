@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: shopping_goods_service
+  profiles:
+    active: dev
+  # Spring Cloud 2025 使用 spring.config.import 加载 Nacos 配置，bootstrap.yml 已废弃
+  config:
+    import:
+      - optional:nacos:shopping_goods_service.yaml
+      - optional:nacos:shopping_goods_service-dev.yaml
+  # SCA 2025 的搜索前缀由 SPI 决定：classpath 存在 spring-cloud-starter-alibaba-nacos-* starter 时
+  # 前缀是 spring.cloud.nacos，否则回落为 spring.nacos。两种写法保持同值，避免类路径变化导致配置失效。
+  nacos:
+    server-addr: 192.168.66.100:8848
+    username: nacos
+    password: nacos
+    discovery:
+      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      group: DEFAULT_GROUP
+    config:
+      namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+      group: DEFAULT_GROUP
+      file-extension: yaml
+      # NacosConfigProperties 的绑定前缀是 <prefix>.config，凭证必须写在这一层；
+      # 只写在根级时配置中心客户端不带账号密码，开启鉴权的服务端会返回 401 User not found
+      username: nacos
+      password: nacos
+  cloud:
+    nacos:
+      server-addr: 192.168.66.100:8848
+      username: nacos
+      password: nacos
+      discovery:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+      config:
+        namespace: 8ae3393c-2080-4209-87a9-b3a5a948d68f
+        group: DEFAULT_GROUP
+        file-extension: yaml
+        # 同上：配置中心凭证只认 spring.cloud.nacos.config.username/password
+        username: nacos
+        password: nacos

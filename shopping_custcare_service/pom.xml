@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.mujinyu</groupId>
+        <artifactId>shopping</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>shopping_custcare_service</artifactId>
+    <name>shopping_custcare_service</name>
+    <description>AI 客服服务（Spring AI + 通义千问 OpenAI 兼容模式）</description>
+    <properties>
+        <java.version>17</java.version>
+        <!-- Spring AI 正式版。根 pom 没有 import spring-ai-bom，所以在本模块自己导一次，
+             这样下面引 starter 时不用逐个写版本号 -->
+        <spring-ai.version>1.0.0</spring-ai.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- 通用模块：BaseResult / BusException / CodeEnum / @LoginUser -->
+        <dependency>
+            <groupId>com.mujinyu</groupId>
+            <artifactId>shopping_common</artifactId>
+        </dependency>
+
+        <!-- redis：会话记忆落 Redis（缺陷 34），版本由根 pom 的 spring-boot-dependencies 统一管理。
+             不引这个 starter 就没有 StringRedisTemplate，RedisChatMemoryRepository 起不来 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+        <!-- web 容器必须自己引：shopping_common 里的 spring-boot-starter-web 是 optional 的，
+             不会传递过来。缺了它启动会报
+             "Web application could not be started as there was no ReactiveWebServerFactory bean"
+             —— 因为 classpath 上只剩 spring-web 的响应式类，没有 tomcat，Spring Boot 误判成 WebFlux 应用 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- MybatisPlus：以后把客服会话记录落库时用 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+        </dependency>
+        <!-- 分页插件：3.5.9 起 PaginationInnerInterceptor 移到这里 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
+        </dependency>
+        <!-- mysql 驱动 -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- dubbo -->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-registry-nacos</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- nacos 配置与注册 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+
+        <!-- Spring AI：OpenAI 兼容模式接入通义千问（DashScope）-->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
+        </dependency>
+
+        <!-- 向量库：Qdrant。starter 会自动装配 QdrantVectorStore（走 gRPC 6334，不是 REST 6333），
+             配置前缀 spring.ai.vectorstore.qdrant.*，
+             EmbeddingModel 复用下面 spring-ai-starter-model-openai 的 OpenAI 兼容客户端 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-vector-store-qdrant</artifactId>
+        </dependency>
+
+        <!-- Sensitive Word 库（该库没有 1.x，版本由父 POM 统一管理） -->
+        <dependency>
+            <groupId>com.github.houbb</groupId>
+            <artifactId>sensitive-word</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
