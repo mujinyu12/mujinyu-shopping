@@ -102,6 +102,8 @@
 | MinIO | `http://192.168.66.100:9100` | 图片存储，bucket `shopping` |
 | SkyWalking | — | 链路追踪（agent 未入库，按需下载） |
 
+> 上表是开发环境的配置（中间件集中在一台虚机上）。换环境时改各模块 `application.yml` 里的 Nacos 地址，中间件地址则在 Nacos 配置中维护。
+
 ## 快速开始
 
 ### 1. 环境要求
@@ -130,16 +132,21 @@ shopping_pay_service-dev.yaml
 ...
 ```
 
-> ⚠️ 密钥（数据库密码、Redis 密码、微信商户号与私钥、MinIO 账号）只在 Nacos 与本机 `~/.shopping/wxpay/apiclient_key.pem`，**没有**进入本仓库。
+配置内容就是各模块原本写在 `application.yml` 里的业务部分：数据源（Druid + MySQL）、Redis、Dubbo（协议端口与注册地址）、Elasticsearch、RocketMQ、MinIO、AI 模型与微信支付参数。由于其中包含数据库密码、Redis 密码、微信商户号与 APIv3 密钥，仓库不附带现成配置，需要按模块补齐。
+
+> ⚠️ 密钥（数据库密码、Redis 密码、微信商户号与私钥、MinIO 账号）只存在于 Nacos 配置和部署机上的 `~/.shopping/wxpay/apiclient_key.pem`，**没有**进入本仓库。
 
 ### 3. 数据库
 
-在 MySQL 中创建库 `baizhanshopping`（utf8mb4），并导入表结构与初始数据（26 张表，前缀 `bz_`）。表结构不在仓库内，可从你本机导出：
+仓库根目录的 `baizhanshopping.sql` 已包含完整库：26 张表（前缀 `bz_`）的结构 + 初始化数据（省市区字典、商品、分类品牌、角色权限、演示订单等）。文件开头自带 `CREATE DATABASE` 与 `USE`，不需要手动建库：
 
 ```bash
-mysqldump --no-data -h127.0.0.1 -uroot -p baizhanshopping > schema.sql
-mysqldump --no-create-info --complete-insert -h127.0.0.1 -uroot -p baizhanshopping > seed.sql
+mysql -h127.0.0.1 -uroot -p < baizhanshopping.sql
 ```
+
+导入后得到库 `baizhanshopping`（utf8mb4）。所有 `DROP TABLE IF EXISTS` 都在文件开头，可重复导入用于重置数据。
+
+> 演示数据中的收货电话已脱敏，`bz_admin`、`bz_shopping_user` 的密码是 BCrypt 哈希，无法直接反推明文。演示账号见下文「验证」一节。
 
 ### 4. 启动顺序
 
@@ -158,20 +165,22 @@ mvn -pl shopping_goods_service spring-boot:run
 mvn -pl shopping_manager_api spring-boot:run
 ```
 
-> `spring-boot:run` 是前台阻塞的，一条命令只能起一个模块。要一次起多个，最省事的是在 IDEA 里给每个 `*Application` 建运行配置（或装一个 Run Configuration 组），一键批量启动 —— 20 多个服务逐个敲命令不现实。
+> `spring-boot:run` 是前台阻塞的，一条命令只能起一个模块。实际开发中通常用 IDEA 的 Run Configuration 给每个 `*Application` 建配置，再建一个 Run Configuration 组批量启动；也可以写脚本并发拉起。启动顺序建议：先 `shopping_common` → 各 `*_service`（Dubbo 提供者）→ 各 `*_customer_api` 与 `manager_api`（消费者），最后起前端。
 
 ### 5. 验证
 
 ```bash
-# 管理端登录（账号在 bz_admin 表，密码为 md5(明文 + "MUJINYU")）
+# 管理端登录（演示账号：mujinyu / sxt / baizhan，密码与账号名相同）
 curl -X POST http://localhost:8001/admin/login \
-     -d "username=<你的管理员账号>&password=<明文密码>"
+     -d "username=mujinyu&password=mujinyu"
 
 # 商品搜索
 curl -X POST http://localhost:8004/user/goodsSearch/search \
      -H "Content-Type: application/json" \
      -d '{"keyword":"手机","page":1,"size":5}'
 ```
+
+管理端前端（`shopping-admin`）用同一个账号登录，登录态是 Session Cookie；用户端（`shopping-user`）的演示账号在 `bz_shopping_user` 表，密码同样以 BCrypt 存储。
 
 ## 关键设计说明
 
@@ -196,6 +205,7 @@ curl -X POST http://localhost:8004/user/goodsSearch/search \
 ```
 shopping/
 ├── pom.xml                     # 父 POM，统一版本管理
+├── baizhanshopping.sql         # 完整数据库：26 张表结构 + 演示数据
 ├── shopping_common/            # 公共模块（响应体、异常、鉴权、工具）
 ├── shopping_*_service/         # Dubbo 服务提供者
 ├── shopping_*_customer_api/    # 用户端 HTTP 接口
